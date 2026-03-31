@@ -6,7 +6,7 @@
 /*   By: volmer <volmer@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 14:53:39 by volmer            #+#    #+#             */
-/*   Updated: 2026/03/31 18:14:53 by volmer           ###   ########.fr       */
+/*   Updated: 2026/03/31 19:53:07 by volmer           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,9 @@ static const char *g_yellow = "\033[33m";
 
 #define COL_STATUS 4
 #define COL_NAME 24
-#define COL_ORIGINAL 20
-#define COL_LIBASM 20
+#define COL_TESTED 18
+#define COL_ORIGINAL 16
+#define COL_LIBASM 16
 
 static int	should_animate(void)
 {
@@ -80,6 +81,8 @@ static void	print_table_border(void)
     printf("+");
     print_repeat('-', COL_NAME + 2);
     printf("+");
+    print_repeat('-', COL_TESTED + 2);
+    printf("+");
     print_repeat('-', COL_ORIGINAL + 2);
     printf("+");
     print_repeat('-', COL_LIBASM + 2);
@@ -90,16 +93,17 @@ static void	print_table_header(const char *title)
 {
     printf("\n%s== %s ==%s\n", g_cyan, title, g_reset);
     print_table_border();
-    printf("| %-*s | %-*s | %-*s | %-*s |\n",
+    printf("| %-*s | %-*s | %-*s | %-*s | %-*s |\n",
         COL_STATUS, "RES",
         COL_NAME, "TEST",
+        COL_TESTED, "TESTED",
         COL_ORIGINAL, "ORIGINAL",
         COL_LIBASM, "LIBASM");
     print_table_border();
 }
 
 static int	report_result(const char *label, int ok,
-        const char *original, const char *libasm)
+        const char *tested, const char *original, const char *libasm)
 {
     const char  *status_text;
     const char  *status_color;
@@ -114,13 +118,16 @@ static int	report_result(const char *label, int ok,
         status_text = "KO";
         status_color = g_red;
     }
-    printf("| %s%-*s%s | %-*s | %s%-*.*s%s | %s%-*.*s%s |\n",
+    printf("| %s%-*s%s | %-*s | %-*.*s | %s%-*.*s%s | %s%-*.*s%s |\n",
         status_color,
         COL_STATUS,
         status_text,
         g_reset,
         COL_NAME,
         label,
+        COL_TESTED,
+        COL_TESTED,
+        tested,
         g_cyan,
         COL_ORIGINAL,
         COL_ORIGINAL,
@@ -139,6 +146,7 @@ static int	test_strlen_case(const char *label, const char *input)
     size_t	libc_len;
     size_t	ft_len;
     int		ok;
+    char	tested[32];
     char	original[32];
     char	libasm[32];
 
@@ -146,9 +154,10 @@ static int	test_strlen_case(const char *label, const char *input)
     libc_len = strlen(input);
     ft_len = ft_strlen(input);
     ok = (libc_len == ft_len);
+    snprintf(tested, sizeof(tested), "%s", input);
     snprintf(original, sizeof(original), "%zu", libc_len);
     snprintf(libasm, sizeof(libasm), "%zu", ft_len);
-    return (report_result(label, ok, original, libasm));
+    return (report_result(label, ok, tested, original, libasm));
 }
 
 static int	check_guard(const unsigned char *mem, size_t guard_size, size_t dst_size)
@@ -176,6 +185,7 @@ static int	test_strcpy_case(const char *label, const char *src)
     char			*dst_libc;
     char			*ret_ft;
     char			*ret_libc;
+    char			tested[32];
     int			ok;
 
     tiny_animation();
@@ -191,7 +201,8 @@ static int	test_strcpy_case(const char *label, const char *src)
     ok = ok && (ret_libc == dst_libc);
     ok = ok && check_guard(mem_ft, GUARD_SIZE, DST_SIZE);
     ok = ok && check_guard(mem_libc, GUARD_SIZE, DST_SIZE);
-    return (report_result(label, ok, dst_libc, dst_ft));
+    snprintf(tested, sizeof(tested), "%s", src);
+    return (report_result(label, ok, tested, dst_libc, dst_ft));
 }
 
 static int	test_strcmp_case(const char *label, const char *s1, const char *s2)
@@ -199,6 +210,7 @@ static int	test_strcmp_case(const char *label, const char *s1, const char *s2)
     int		libc_cmp;
     int		ft_cmp;
     int		ok;
+    char	tested[32];
     char	original[32];
     char	libasm[32];
 
@@ -206,9 +218,10 @@ static int	test_strcmp_case(const char *label, const char *s1, const char *s2)
     libc_cmp = strcmp(s1, s2);
     ft_cmp = ft_strcmp(s1, s2);
     ok = (libc_cmp == ft_cmp);
+    snprintf(tested, sizeof(tested), "%s,%s", s1, s2);
     snprintf(original, sizeof(original), "%d", libc_cmp);
     snprintf(libasm, sizeof(libasm), "%d", ft_cmp);
-    return (report_result(label, ok, original, libasm));
+    return (report_result(label, ok, tested, original, libasm));
 }
 
 int	main(void)
