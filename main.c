@@ -6,7 +6,7 @@
 /*   By: volmer <volmer@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 14:53:39 by volmer            #+#    #+#             */
-/*   Updated: 2026/03/31 19:53:07 by volmer           ###   ########.fr       */
+/*   Updated: 2026/03/31 19:58:54 by volmer           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,12 @@
 #include <stddef.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
 
 extern size_t ft_strlen(const char *s);
 extern char *ft_strcpy(char *dst, const char *src);
 extern int ft_strcmp(const char *s1, const char *s2);
+extern ssize_t ft_write(int fd, const void *buf, size_t count);
 
 static const char *g_reset = "\033[0m";
 static const char *g_green = "\033[32m";
@@ -224,6 +226,79 @@ static int	test_strcmp_case(const char *label, const char *s1, const char *s2)
     return (report_result(label, ok, tested, original, libasm));
 }
 
+static int	test_write_pipe_case(const char *label, const char *buf, size_t count)
+{
+    int		pipe_libc[2];
+    int		pipe_ft[2];
+    ssize_t	libc_ret;
+    ssize_t	ft_ret;
+    int		libc_errno;
+    int		ft_errno;
+    char		read_libc[256];
+    char		read_ft[256];
+    ssize_t	read_libc_ret;
+    ssize_t	read_ft_ret;
+    int		ok;
+    char	tested[32];
+    char	original[32];
+    char	libasm[32];
+
+    tiny_animation();
+    if (pipe(pipe_libc) == -1 || pipe(pipe_ft) == -1)
+        return (report_result(label, 0, "pipe", "pipe err", "pipe err"));
+    errno = 0;
+    libc_ret = write(pipe_libc[1], buf, count);
+    libc_errno = errno;
+    errno = 0;
+    ft_ret = ft_write(pipe_ft[1], buf, count);
+    ft_errno = errno;
+    read_libc_ret = 0;
+    read_ft_ret = 0;
+    if (libc_ret > 0)
+        read_libc_ret = read(pipe_libc[0], read_libc, sizeof(read_libc));
+    if (ft_ret > 0)
+        read_ft_ret = read(pipe_ft[0], read_ft, sizeof(read_ft));
+    close(pipe_libc[0]);
+    close(pipe_libc[1]);
+    close(pipe_ft[0]);
+    close(pipe_ft[1]);
+    ok = (libc_ret == ft_ret);
+    ok = ok && (libc_errno == ft_errno);
+    ok = ok && (read_libc_ret == read_ft_ret);
+    if (read_libc_ret > 0 && read_ft_ret > 0)
+        ok = ok && (memcmp(read_libc, read_ft, (size_t)read_libc_ret) == 0);
+    snprintf(tested, sizeof(tested), "n=%zu", count);
+    snprintf(original, sizeof(original), "%zd/e%d", libc_ret, libc_errno);
+    snprintf(libasm, sizeof(libasm), "%zd/e%d", ft_ret, ft_errno);
+    return (report_result(label, ok, tested, original, libasm));
+}
+
+static int	test_write_bad_fd_case(const char *label)
+{
+    const char	*msg;
+    ssize_t		libc_ret;
+    ssize_t		ft_ret;
+    int			libc_errno;
+    int			ft_errno;
+    int			ok;
+    char		original[32];
+    char		libasm[32];
+
+    tiny_animation();
+    msg = "X";
+    errno = 0;
+    libc_ret = write(-1, msg, 1);
+    libc_errno = errno;
+    errno = 0;
+    ft_ret = ft_write(-1, msg, 1);
+    ft_errno = errno;
+    ok = (libc_ret == ft_ret);
+    ok = ok && (libc_errno == ft_errno);
+    snprintf(original, sizeof(original), "%zd/e%d", libc_ret, libc_errno);
+    snprintf(libasm, sizeof(libasm), "%zd/e%d", ft_ret, ft_errno);
+    return (report_result(label, ok, "fd=-1,n=1", original, libasm));
+}
+
 int	main(void)
 {
     int	passed;
@@ -271,6 +346,16 @@ int	main(void)
     passed += test_strcmp_case("strcmp empty", "", "");
     total++;
     passed += test_strcmp_case("strcmp symbols", "!@#", "!@$");
+    total++;
+    print_table_border();
+    print_table_header("ft_write");
+    passed += test_write_pipe_case("write pipe text", "Hola42", 6);
+    total++;
+    passed += test_write_pipe_case("write pipe empty", "", 0);
+    total++;
+    passed += test_write_pipe_case("write null count0", NULL, 0);
+    total++;
+    passed += test_write_bad_fd_case("write bad fd");
     total++;
     print_table_border();
     if (passed == total)

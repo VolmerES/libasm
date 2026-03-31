@@ -13,6 +13,7 @@
 
 section .text
 	global _ft_write
+	extern __error ; Declaración de la función de error, asumiendo que existe en otro archivo
 
 _ft_write:
 	; rdi = fd, rsi = buf, rdx = count
