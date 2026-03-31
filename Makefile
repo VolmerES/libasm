@@ -23,7 +23,7 @@ fclean: clean
 re: fclean all
 
 test: all
-	ash ./run_tests.sh
+	bash ./run_tests.sh
 	@$(MAKE) fclean >/dev/null
 
 .PHONY: all clean fclean re test
