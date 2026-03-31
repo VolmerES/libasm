@@ -6,7 +6,7 @@
 /*   By: volmer <volmer@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 14:53:39 by volmer            #+#    #+#             */
-/*   Updated: 2026/03/31 17:23:13 by volmer           ###   ########.fr       */
+/*   Updated: 2026/03/31 18:14:53 by volmer           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 
 extern size_t ft_strlen(const char *s);
 extern char *ft_strcpy(char *dst, const char *src);
+extern int ft_strcmp(const char *s1, const char *s2);
 
 static const char *g_reset = "\033[0m";
 static const char *g_green = "\033[32m";
@@ -193,6 +194,23 @@ static int	test_strcpy_case(const char *label, const char *src)
     return (report_result(label, ok, dst_libc, dst_ft));
 }
 
+static int	test_strcmp_case(const char *label, const char *s1, const char *s2)
+{
+    int		libc_cmp;
+    int		ft_cmp;
+    int		ok;
+    char	original[32];
+    char	libasm[32];
+
+    tiny_animation();
+    libc_cmp = strcmp(s1, s2);
+    ft_cmp = ft_strcmp(s1, s2);
+    ok = (libc_cmp == ft_cmp);
+    snprintf(original, sizeof(original), "%d", libc_cmp);
+    snprintf(libasm, sizeof(libasm), "%d", ft_cmp);
+    return (report_result(label, ok, original, libasm));
+}
+
 int	main(void)
 {
     int	passed;
@@ -226,6 +244,20 @@ int	main(void)
     passed += test_strcpy_case("strcpy spaces", "   hello 42   ");
     total++;
     passed += test_strcpy_case("strcpy alphabet", "abcdefghijklmnopqrstuvwxyz");
+    total++;
+    print_table_border();
+    print_table_header("ft_strcmp");
+    passed += test_strcmp_case("strcmp equal", "42", "42");
+    total++;
+    passed += test_strcmp_case("strcmp diff char", "abc", "abd");
+    total++;
+    passed += test_strcmp_case("strcmp prefix", "abc", "abcd");
+    total++;
+    passed += test_strcmp_case("strcmp reversed", "abcd", "abc");
+    total++;
+    passed += test_strcmp_case("strcmp empty", "", "");
+    total++;
+    passed += test_strcmp_case("strcmp symbols", "!@#", "!@$");
     total++;
     print_table_border();
     if (passed == total)
