@@ -23,5 +23,7 @@ fclean: clean
 re: fclean all
 
 test: all
-	gcc $(FLAGS) main.c $(NAME) -o test_program
-	./test_program
+	ash ./run_tests.sh
+	@$(MAKE) fclean >/dev/null
+
+.PHONY: all clean fclean re test
