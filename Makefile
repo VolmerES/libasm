@@ -1,5 +1,5 @@
 NAME = libasm.a
-SRC = ft_strlen.s ft_strcpy.s ft_strcmp.s ft_write.s
+SRC = ft_strlen.s ft_strcpy.s ft_strcmp.s ft_write.s ft_read.s
 OBJ = $(SRC:.s=.o)
 
 # -f elf64 para Linux, -f macho64 si estás en un Mac de 42
