@@ -43,6 +43,10 @@ To compile the library and test the functions, follow these steps:
 
 6. Run the provided tests to compare the assembly functions against the standard C library:
    ```bash
+   make test
+   ```
+   *Alternatively, you can run the test script directly:*
+   ```bash
    ./run_tests.sh
    ```
 
@@ -55,6 +59,6 @@ To compile the library and test the functions, follow these steps:
 ## AI usage
 In this project, AI was utilized **strictly as a mentor and tester**. It assisted in:
 * Reviewing and explaining logic issues or segmentation faults in the assembly code.
-* Explaning new concepts
+* Explaining new concepts.
 * Structuring and completing the `main.c` testing suite to effectively validate the correctness of the custom assembly functions compared to libc.
-* Creating documentation like this README.md
+* Creating documentation such as this README.md.
