@@ -1,0 +1,5 @@
+# Ignora los archivos .c en el cálculo de estadísticas (como tus tests)
+*.c linguist-detectable=false
+
+# Opcionalmente, puedes asegurarte de que reconoce bien los archivos .s
+*.s linguist-language=Assembly
