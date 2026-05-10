@@ -6,7 +6,7 @@
 /*   By: volmer <volmer@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 14:53:39 by volmer            #+#    #+#             */
-/*   Updated: 2026/03/31 19:58:54 by volmer           ###   ########.fr       */
+/*   Updated: 2026/05/10 22:08:21 by volmer           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ extern size_t ft_strlen(const char *s);
 extern char *ft_strcpy(char *dst, const char *src);
 extern int ft_strcmp(const char *s1, const char *s2);
 extern ssize_t ft_write(int fd, const void *buf, size_t count);
+extern ssize_t ft_read(int fd, void *buf, size_t count);
 
 static const char *g_reset = "\033[0m";
 static const char *g_green = "\033[32m";
@@ -299,6 +300,76 @@ static int	test_write_bad_fd_case(const char *label)
     return (report_result(label, ok, "fd=-1,n=1", original, libasm));
 }
 
+static int	test_read_pipe_case(const char *label, const char *input)
+{
+    int		pipe_libc[2];
+    int		pipe_ft[2];
+    ssize_t	libc_ret;
+    ssize_t	ft_ret;
+    int		libc_errno;
+    int		ft_errno;
+    char	buf_libc[256];
+    char	buf_ft[256];
+    int		ok;
+    char	tested[32];
+    char	original[32];
+    char	libasm[32];
+    size_t	input_len;
+
+    tiny_animation();
+    input_len = strlen(input);
+    if (pipe(pipe_libc) == -1 || pipe(pipe_ft) == -1)
+        return (report_result(label, 0, "pipe", "pipe err", "pipe err"));
+    write(pipe_libc[1], input, input_len);
+    write(pipe_ft[1], input, input_len);
+    memset(buf_libc, 0, sizeof(buf_libc));
+    memset(buf_ft, 0, sizeof(buf_ft));
+    errno = 0;
+    libc_ret = read(pipe_libc[0], buf_libc, input_len);
+    libc_errno = errno;
+    errno = 0;
+    ft_ret = ft_read(pipe_ft[0], buf_ft, input_len);
+    ft_errno = errno;
+    close(pipe_libc[0]);
+    close(pipe_libc[1]);
+    close(pipe_ft[0]);
+    close(pipe_ft[1]);
+    ok = (libc_ret == ft_ret);
+    ok = ok && (libc_errno == ft_errno);
+    if (libc_ret > 0)
+        ok = ok && (memcmp(buf_libc, buf_ft, (size_t)libc_ret) == 0);
+    snprintf(tested, sizeof(tested), "n=%zu", input_len);
+    snprintf(original, sizeof(original), "%zd/e%d", libc_ret, libc_errno);
+    snprintf(libasm, sizeof(libasm), "%zd/e%d", ft_ret, ft_errno);
+    return (report_result(label, ok, tested, original, libasm));
+}
+
+static int	test_read_bad_fd_case(const char *label)
+{
+    char	buf_libc[10];
+    char	buf_ft[10];
+    ssize_t	libc_ret;
+    ssize_t	ft_ret;
+    int		libc_errno;
+    int		ft_errno;
+    int		ok;
+    char	original[32];
+    char	libasm[32];
+
+    tiny_animation();
+    errno = 0;
+    libc_ret = read(-1, buf_libc, 1);
+    libc_errno = errno;
+    errno = 0;
+    ft_ret = ft_read(-1, buf_ft, 1);
+    ft_errno = errno;
+    ok = (libc_ret == ft_ret);
+    ok = ok && (libc_errno == ft_errno);
+    snprintf(original, sizeof(original), "%zd/e%d", libc_ret, libc_errno);
+    snprintf(libasm, sizeof(libasm), "%zd/e%d", ft_ret, ft_errno);
+    return (report_result(label, ok, "fd=-1,n=1", original, libasm));
+}
+
 int	main(void)
 {
     int	passed;
@@ -356,6 +427,14 @@ int	main(void)
     passed += test_write_pipe_case("write null count0", NULL, 0);
     total++;
     passed += test_write_bad_fd_case("write bad fd");
+    total++;
+    print_table_border();
+    print_table_header("ft_read");
+    passed += test_read_pipe_case("read pipe text", "Hola42");
+    total++;
+    passed += test_read_pipe_case("read pipe empty", "");
+    total++;
+    passed += test_read_bad_fd_case("read bad fd");
     total++;
     print_table_border();
     if (passed == total)
