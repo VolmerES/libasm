@@ -6,7 +6,7 @@
 /*   By: volmer <volmer@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 14:53:39 by volmer            #+#    #+#             */
-/*   Updated: 2026/05/10 22:08:21 by volmer           ###   ########.fr       */
+/*   Updated: 2026/05/10 22:15:48 by volmer           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ extern char *ft_strcpy(char *dst, const char *src);
 extern int ft_strcmp(const char *s1, const char *s2);
 extern ssize_t ft_write(int fd, const void *buf, size_t count);
 extern ssize_t ft_read(int fd, void *buf, size_t count);
+extern char *ft_strdup(const char *s);
 
 static const char *g_reset = "\033[0m";
 static const char *g_green = "\033[32m";
@@ -370,6 +371,42 @@ static int	test_read_bad_fd_case(const char *label)
     return (report_result(label, ok, "fd=-1,n=1", original, libasm));
 }
 
+static int	test_strdup_case(const char *label, const char *src)
+{
+    char	*ret_libc;
+    char	*ret_ft;
+    int		ok;
+    char	tested[32];
+    char	original[32];
+    char	libasm[32];
+
+    tiny_animation();
+    ret_libc = strdup(src);
+    ret_ft = ft_strdup(src);
+    
+    ok = 1;
+    if (ret_libc == NULL || ret_ft == NULL)
+    {
+        if (ret_libc != ret_ft)
+            ok = 0;
+    }
+    else
+    {
+        ok = (strcmp(ret_libc, ret_ft) == 0);
+    }
+    
+    snprintf(tested, sizeof(tested), "%s", src);
+    snprintf(original, sizeof(original), "%s", ret_libc ? ret_libc : "NULL");
+    snprintf(libasm, sizeof(libasm), "%s", ret_ft ? ret_ft : "NULL");
+    
+    if (ret_libc)
+        free(ret_libc);
+    if (ret_ft)
+        free(ret_ft);
+        
+    return (report_result(label, ok, tested, original, libasm));
+}
+
 int	main(void)
 {
     int	passed;
@@ -435,6 +472,14 @@ int	main(void)
     passed += test_read_pipe_case("read pipe empty", "");
     total++;
     passed += test_read_bad_fd_case("read bad fd");
+    total++;
+    print_table_border();
+    print_table_header("ft_strdup");
+    passed += test_strdup_case("strdup normal", "Hola 42");
+    total++;
+    passed += test_strdup_case("strdup empty", "");
+    total++;
+    passed += test_strdup_case("strdup long", "This is a much longer string testing allocation");
     total++;
     print_table_border();
     if (passed == total)
