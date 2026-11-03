@@ -62,3 +62,7 @@ In this project, AI was utilized **strictly as a mentor and tester**. It assiste
 * Explaining new concepts.
 * Structuring and completing the `main.c` testing suite to effectively validate the correctness of the custom assembly functions compared to libc.
 * Creating documentation such as this README.md.
+
+## License
+
+Released under the [MIT License](LICENSE). © 2026 Juan Bautista Delorme Pinedo.
